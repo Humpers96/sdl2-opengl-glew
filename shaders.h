@@ -24,6 +24,7 @@ namespace shaders
             vertex_shader_ += line + "\n";
         }
 
+        file.close();
         file.open("frag.shader", std::ios::in);
 
         if (!file.is_open())

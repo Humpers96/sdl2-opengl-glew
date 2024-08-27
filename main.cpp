@@ -152,6 +152,8 @@ int main(int argc, char** argv)
     const char* f_shader_source = shaders::fragment_shader();
     GLuint f_shader;
 
+    f_shader = glCreateShader(GL_FRAGMENT_SHADER);
+
     glShaderSource(f_shader, 1, &f_shader_source, NULL);
     glCompileShader(f_shader);
 
