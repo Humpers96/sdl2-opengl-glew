@@ -189,12 +189,6 @@ int main(int argc, char** argv)
         {  0.0f,  0.5f, 0.0f }
     };
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left  
-         0.5f, -0.5f, 0.0f, // right 
-         0.0f,  0.5f, 0.0f  // top   
-    }; 
-
     // init vertex buffer obj & vertex array obj
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -265,6 +259,16 @@ int main(int argc, char** argv)
             }
         }
     }
+
+    // OpenGL shutdown
+    // ---------------
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shader_program);
+
+    // SDL shutdown
+    // ------------
 
     SDL_DestroyWindow(sdl_window);
     SDL_Quit();
