@@ -198,13 +198,14 @@ int main(int argc, char** argv)
     //     {-0.5f,  0.5f, 0.0f }  // top left
     // };
 
-    float vertices[] = {
-         0.5f,  0.5f, 0.0f,  // top right
-         0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f   // top left 
+    std::vector<vertex> verts = 
+    {
+        {  0.5f,  0.5f, 0.0f }, // top right
+        {  0.5f, -0.5f, 0.0f }, // bottom right
+        { -0.5f, -0.5f, 0.0f }, // bottom left
+        { -0.5f,  0.5f, 0.0f }  // top left
     };
-
+    
     unsigned int indices[] = 
     {
         0, 1, 3,
@@ -233,7 +234,7 @@ int main(int argc, char** argv)
     // type of buffer to copy into, size, data
     // STATIC - data set once, drawn many times
     // DYNAMIC - data set many times, drawn many times
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verts) * verts.size(), vec_addr(verts), GL_STATIC_DRAW);
     //glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * verts.size(), vec_addr(verts), GL_STATIC_DRAW);
     // at this point vertex data is stored on the gpu in memory managed by the vertex buffer VBO
 
@@ -259,11 +260,6 @@ int main(int argc, char** argv)
     // enable the vertex attributes using vertex attribute location (location = 0)
     glEnableVertexAttribArray(0);
     
-
-
-
-
-
     bool malta = false;
 
     while (malta == LOSER)
@@ -284,7 +280,7 @@ int main(int argc, char** argv)
         // number of vertices to draw
         //glDrawArrays(GL_TRIANGLES, 0, verts.size());
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
 
         // swap buffers
         SDL_GL_SwapWindow(sdl_window);
