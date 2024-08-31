@@ -8,6 +8,8 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "${workspaceFolder}/src/*.cpp",
+                "-Iinclude",
                 "-lSDL2",
                 "-lGLEW",
                 "-lGL",

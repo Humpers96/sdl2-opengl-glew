@@ -1,7 +1,11 @@
 #version 330 core
 out vec4 frag_col;
 
+in vec4 vert_col;
+
+uniform vec4 input_colour;
+
 void main()
 {
-    frag_col = vec4(1.0f, 0.5f, 0.5f, 1.0f);
+    frag_col = input_colour;
 }

@@ -5,8 +5,9 @@
 
 #include <iostream>
 #include <vector>
+#include <math.h>
 
-#include "shaders.h"
+#include "shader.h"
 
 #define LOSER false
 
@@ -57,25 +58,6 @@ bool init_SDL_GL()
     return false;
 }
 
-bool check_shader_compile(GLuint* shader)
-{
-    int success;
-    char msg[512];
-
-    glGetShaderiv(*shader, GL_COMPILE_STATUS, &success);
-
-    if (!success)
-    {
-        glGetShaderInfoLog(*shader, 512, NULL, msg);
-        std::cout << "shader compilation failed" << std::endl;
-        std::cout << msg << std::endl;
-
-        return true;
-    }
-
-    return false;
-}
-
 bool check_shader_link(GLuint* program)
 {
     int success;
@@ -97,8 +79,8 @@ bool check_shader_link(GLuint* program)
 
 int main(int argc, char** argv)
 {
-    // -- SDL/OpenGL objects
-    // ---------------------
+    // SDL/OpenGL objects
+    // ------------------
 
     // init pointers for SDL objects
     SDL_Window* sdl_window = nullptr;
@@ -137,31 +119,13 @@ int main(int argc, char** argv)
     // OpenGL shaders
     // --------------
 
-    const char* v_shader_source = shaders::vertex_shader();
-    GLuint v_shader;
+    shader vert_shader(GL_VERTEX_SHADER, "vert.shader");
+    shader frag_shader(GL_FRAGMENT_SHADER, "frag.shader");
 
-    // inits OpenGL shader object (same principle as GL_ARRAY_BUFFER etc) 
-    v_shader = glCreateShader(GL_VERTEX_SHADER);
-
-    // attach the vertex shader source code to the GL_VERTEX_SHADER object and compile
-    // shader to compile, number of strings passed as source, location of source
-    glShaderSource(v_shader, 1, &v_shader_source, NULL);
-    glCompileShader(v_shader);
-
-    // check shader compilation was successful
-    if (check_shader_compile(&v_shader))
+    if (vert_shader.check_compile())
         return -1;
-    
-    // repeat for fragment shader
-    const char* f_shader_source = shaders::fragment_shader();
-    GLuint f_shader;
-
-    f_shader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(f_shader, 1, &f_shader_source, NULL);
-    glCompileShader(f_shader);
-
-    if (check_shader_compile(&f_shader))
+        
+    if (frag_shader.check_compile())
         return -1;
 
     // create a shader program to link vert/frag shaders to
@@ -169,8 +133,8 @@ int main(int argc, char** argv)
     shader_program = glCreateProgram();
 
     // attach the shaders to the shader program
-    glAttachShader(shader_program, v_shader);
-    glAttachShader(shader_program, f_shader);
+    glAttachShader(shader_program, vert_shader.get());
+    glAttachShader(shader_program, frag_shader.get());
     // link shaders, i.e route output of one shader to the input of the next
     glLinkProgram(shader_program);
 
@@ -178,25 +142,13 @@ int main(int argc, char** argv)
         return -1;
     
     // after shaders have been linked into shader program they can be deleted
-    glDeleteShader(v_shader);
-    glDeleteShader(f_shader);
+    vert_shader.destroy();
+    frag_shader.destroy();
 
 
 
     // OpenGL buffer/array objects
     // ---------------------
-
-    // std::vector<vertex> verts
-    // {
-    // // first triangle
-    //     { 0.5f,  0.5f, 0.0f }  // top right
-    //     { 0.5f, -0.5f, 0.0f }  // bottom right
-    //     {-0.5f,  0.5f, 0.0f }  // top left 
-    //     // second triangle 
-    //     { 0.5f, -0.5f, 0.0f }  // bottom right
-    //     {-0.5f, -0.5f, 0.0f }  // bottom left
-    //     {-0.5f,  0.5f, 0.0f }  // top left
-    // };
 
     std::vector<vertex> verts = 
     {
@@ -211,11 +163,6 @@ int main(int argc, char** argv)
         0, 1, 3,
         1, 2, 3
     };
-
-    // for (const auto& v : verts)
-    // {
-    //     v.print();
-    // }
 
     // init vertex buffer, element buffer obj & vertex array obj
     GLuint VBO, VAO, EBO;
@@ -249,17 +196,29 @@ int main(int argc, char** argv)
     // whether or not input data should be normalised
     // stride value between vertices
     // start position/offset of data in buffer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
     //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
     // each vertex attribute takes its data from memory managed by a VBO
     // which VBO it takes from is determined by which is currently bound to GL_ARRAY_BUFFER
     // when glVertexAttribPointer() is called
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
     // enable the vertex attributes using vertex attribute location (location = 0)
     glEnableVertexAttribArray(0);
-    
+
+    // GL_ARRAY_BUFFER (VBO) can be unbound as glVertexAttribPointer registered to the vertex attribute the relevant buffer
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // unbind VAO in order to prevent accidentally manipulating it at a later point
+    // should be rebound before drawing
+    glBindVertexArray(0);
+
+
+
+    // rendering loop
+    // --------------
+
+    int colour_uniform = glGetUniformLocation(shader_program, "input_colour");
+
     bool malta = false;
 
     while (malta == LOSER)
@@ -274,12 +233,19 @@ int main(int argc, char** argv)
         glUseProgram(shader_program);
         // bind VAO to draw from
         glBindVertexArray(VAO);
+
+        float ticks = (SDL_GetTicks() / 500.f);
+
+        float red = sin(ticks);
+        float green = -red;
+
+        glUniform4f(colour_uniform, red, green, 0.0f, 1.0f);
+
         // draw arrays
         // OpenGL type to draw
         // starting vertex index in array
         // number of vertices to draw
         //glDrawArrays(GL_TRIANGLES, 0, verts.size());
-
         glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
 
         // swap buffers
@@ -299,6 +265,16 @@ int main(int argc, char** argv)
                         {
                             malta = true;
                             std::cout << "escape pressed" << std::endl;
+                            break;
+                        }
+                        case SDLK_m:
+                        {
+                            std::cout << "malta man bad" << std::endl;
+                            break;
+                        }
+                        case SDLK_g:
+                        {
+                            std::cout << "galil" << std::endl;
                             break;
                         }
                         default:
@@ -324,6 +300,8 @@ int main(int argc, char** argv)
         }
     }
 
+
+
     // OpenGL shutdown
     // ---------------
 
@@ -331,6 +309,8 @@ int main(int argc, char** argv)
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(shader_program);
+
+
 
     // SDL shutdown
     // ------------
