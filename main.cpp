@@ -181,8 +181,7 @@ int main(int argc, char** argv)
     // type of buffer to copy into, size, data
     // STATIC - data set once, drawn many times
     // DYNAMIC - data set many times, drawn many times
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verts) * verts.size(), vec_addr(verts), GL_STATIC_DRAW);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * verts.size(), vec_addr(verts), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * verts.size(), vec_addr(verts), GL_STATIC_DRAW);
     // at this point vertex data is stored on the gpu in memory managed by the vertex buffer VBO
 
     // binds EBO to the GL_ELEMENT_ARRAY_BUFFER target
@@ -197,7 +196,6 @@ int main(int argc, char** argv)
     // stride value between vertices
     // start position/offset of data in buffer
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
     // each vertex attribute takes its data from memory managed by a VBO
     // which VBO it takes from is determined by which is currently bound to GL_ARRAY_BUFFER
     // when glVertexAttribPointer() is called
